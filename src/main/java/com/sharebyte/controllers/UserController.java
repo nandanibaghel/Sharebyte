@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sharebyte.dtos.LoginRequestDTO;
+import com.sharebyte.dtos.LoginResponseDTO;
 import com.sharebyte.dtos.RegisterRequestDTO;
 import com.sharebyte.dtos.RegisterResponseDTO;
 import com.sharebyte.services.UserService;
@@ -26,5 +28,14 @@ public class UserController {
 		RegisterResponseDTO response =  userService.register(request);
 		
 		 return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	}
+	
+	@PostMapping("/login")
+	public ResponseEntity<LoginResponseDTO> login(
+	        @Valid @RequestBody LoginRequestDTO request) {
+
+	    LoginResponseDTO response = userService.login(request);
+
+	    return ResponseEntity.ok(response);
 	}
 }

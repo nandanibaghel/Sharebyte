@@ -39,4 +39,31 @@ public class GlobalExceptionHandler {
 		
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
 	}
+	
+	@ExceptionHandler(UserNotFoundException.class)
+	public ResponseEntity<Map<String, Object>> handleUserNotFound(
+	        UserNotFoundException ex) {
+
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("status", HttpStatus.UNAUTHORIZED.value());
+	    response.put("message", ex.getMessage());
+
+	    return ResponseEntity
+	            .status(HttpStatus.UNAUTHORIZED)
+	            .body(response);
+	}
+
+	@ExceptionHandler(AccountNotActiveException.class)
+	public ResponseEntity<Map<String, Object>> handleInactiveAccount(
+	        AccountNotActiveException ex) {
+
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("status", HttpStatus.FORBIDDEN.value());
+	    response.put("message", ex.getMessage());
+
+	    return ResponseEntity
+	            .status(HttpStatus.FORBIDDEN)
+	            .body(response);
+	}
+
 }
