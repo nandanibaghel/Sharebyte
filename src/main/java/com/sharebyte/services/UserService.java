@@ -1,7 +1,10 @@
 package com.sharebyte.services;
 
+import java.time.LocalDateTime;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,24 +18,28 @@ import com.sharebyte.dtos.LoginResponseDTO;
 import com.sharebyte.dtos.RegisterRequestDTO;
 import com.sharebyte.dtos.RegisterResponseDTO;
 import com.sharebyte.entities.User;
+import com.sharebyte.entities.VerificationToken;
 import com.sharebyte.enums.UserStatus;
 import com.sharebyte.exception.AccountNotActiveException;
 import com.sharebyte.exception.EmailAlreadyExistsException;
 import com.sharebyte.exception.GlobalExceptionHandler;
 import com.sharebyte.exception.UserNotFoundException;
 import com.sharebyte.repositories.UserRepository;
+import com.sharebyte.repositories.VerificationRepo;
 
 @Service 
 public class UserService {
 
-    private final GlobalExceptionHandler globalExceptionHandler;
+    private GlobalExceptionHandler globalExceptionHandler;
   
 	@Autowired
 	UserRepository userRepository;
+	
+	@Autowired
+	EmailService emailService;
 
-    UserService(GlobalExceptionHandler globalExceptionHandler) {
-        this.globalExceptionHandler = globalExceptionHandler;
-    }
+	@Autowired     
+    VerificationRepo verificationRepo;
 
 	public User getUserByEmail(String email){
 		 return userRepository.findByEmail(email);
@@ -53,6 +60,29 @@ public class UserService {
 		
 		userRepository.save(user);
 		
+		emailService.sendEmail(
+			    user.getEmail(),
+			    "Verify your ShareByte account",
+			    "Thank you for registering.\nPlease verify your email to activate your account."
+			);
+		
+		String token = UUID.randomUUID().toString();
+
+		VerificationToken verificationToken = new VerificationToken();
+		verificationToken.setToken(token);
+		verificationToken.setUser(user);
+		verificationToken.setExpiryDate(LocalDateTime.now().plusHours(24));
+
+		verificationRepo.save(verificationToken);
+		
+		String verificationLink = "http://localhost:8080/api/auth/verify?token=" + token;
+
+		emailService.sendEmail(
+			    user.getEmail(),
+			    "Verify your ShareByte account",
+			    "Click the link to verify your account:\n" + verificationLink
+		);
+
 		RegisterResponseDTO response = new RegisterResponseDTO();
 		response.setEmail(user.getEmail());
 		response.setStatus(user.getStatus().name());
@@ -60,6 +90,7 @@ public class UserService {
 		
 		return response;
 	}
+	
 	
 	public LoginResponseDTO login(LoginRequestDTO request) {
 
@@ -87,5 +118,24 @@ public class UserService {
 	    return response;
 	}
 
+	public void verifyUser(String token) {
 
+	    VerificationToken verificationToken =
+	        verificationRepo.findByToken(token)
+	        .orElseThrow(() ->
+	            new RuntimeException("Invalid verification token"));
+
+	    if (verificationToken.getExpiryDate()
+	            .isBefore(LocalDateTime.now())) {
+	        throw new RuntimeException("Token expired");
+	    }
+
+	    User user = verificationToken.getUser();
+	    user.setStatus(UserStatus.ACTIVE);
+
+	    userRepository.save(user);
+	    verificationRepo.delete(verificationToken);
+	}
+	
 }
+
