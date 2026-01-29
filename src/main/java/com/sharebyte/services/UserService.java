@@ -4,11 +4,13 @@ import java.time.LocalDateTime;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -25,21 +27,30 @@ import com.sharebyte.exception.EmailAlreadyExistsException;
 import com.sharebyte.exception.GlobalExceptionHandler;
 import com.sharebyte.exception.UserNotFoundException;
 import com.sharebyte.repositories.UserRepository;
-import com.sharebyte.repositories.VerificationRepo;
+
+import com.sharebyte.repositories.VerificationTokenRepository;
+import com.sharebyte.security.JwtUtil;
 
 @Service 
 public class UserService {
 
     private GlobalExceptionHandler globalExceptionHandler;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    @Autowired
+    private PasswordEncoder encoder;
   
+    
 	@Autowired
-	UserRepository userRepository;
+	private UserRepository userRepository;
 	
 	@Autowired
-	EmailService emailService;
+	private EmailService emailService;
 
 	@Autowired     
-    VerificationRepo verificationRepo;
+    private VerificationTokenRepository verificationRepo;
 
 	public User getUserByEmail(String email){
 		 return userRepository.findByEmail(email);
@@ -54,7 +65,7 @@ public class UserService {
 		User user = new User();
 		user.setName(request.getName());
 		user.setEmail(request.getEmail());
-		user.setPassword(request.getPassword());
+		user.setPassword(encoder.encode(request.getPassword()));
 		user.setStatus(UserStatus.PENDING_VERIFIACATION);
 		user.setRole(request.getRole());
 		
@@ -75,7 +86,7 @@ public class UserService {
 
 		verificationRepo.save(verificationToken);
 		
-		String verificationLink = "http://localhost:8080/api/auth/verify?token=" + token;
+		String verificationLink = "http://localhost:8080/auth/verify?token=" + token;
 
 		emailService.sendEmail(
 			    user.getEmail(),
@@ -99,32 +110,38 @@ public class UserService {
         	throw new UserNotFoundException("Invalid credentials");
         }
 
-//	    if (!passwordEncoder.matches(
-//	            request.getPassword(),
-//	            user.getPassword())) {
-//	        throw new UserNotFoundException("Invalid credentials");
-//	    }
+	    if (!encoder.matches(
+	            request.getPassword(),
+	            user.getPassword())) {
+	        throw new UserNotFoundException("Invalid credentials");
+	    }
 
 	    if (user.getStatus() != UserStatus.ACTIVE) {
 	        throw new AccountNotActiveException(
 	                "Please verify your email before login");
 	    }
+	    
+	    String token = jwtUtil.generateToken(user.getEmail());
 
 	    LoginResponseDTO response = new LoginResponseDTO();
 	    response.setEmail(user.getEmail());
 	    response.setRole(user.getRole());
+	    response.setToken(token);
 	    response.setMessage("Login successful");
 
 	    return response;
 	}
 
 	public void verifyUser(String token) {
-
-	    VerificationToken verificationToken =
-	        verificationRepo.findByToken(token)
-	        .orElseThrow(() ->
-	            new RuntimeException("Invalid verification token"));
-
+		System.out.println(verificationRepo);
+	    Optional<VerificationToken> op =
+	        verificationRepo.findByToken(token);
+	    if(op.isEmpty() || !op.isPresent()) {
+	    	throw new RuntimeException();
+	    }
+	    
+	    VerificationToken verificationToken = op.get();
+	      
 	    if (verificationToken.getExpiryDate()
 	            .isBefore(LocalDateTime.now())) {
 	        throw new RuntimeException("Token expired");
