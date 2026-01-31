@@ -1,5 +1,7 @@
 package com.sharebyte.dtos;
 
+import com.sharebyte.enums.Role;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -46,5 +48,6 @@ public class RegisterRequestDTO {
 	public void setRole(String role) {
 		this.role = role;
 	}
+	
 	
 }

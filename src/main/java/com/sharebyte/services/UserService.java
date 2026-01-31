@@ -1,5 +1,10 @@
 package com.sharebyte.services;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 
 import java.util.HashMap;
@@ -10,17 +15,21 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.sharebyte.controllers.UserController;
 import com.sharebyte.dtos.LoginRequestDTO;
 import com.sharebyte.dtos.LoginResponseDTO;
 import com.sharebyte.dtos.RegisterRequestDTO;
 import com.sharebyte.dtos.RegisterResponseDTO;
+import com.sharebyte.dtos.UserProfileResponseDTO;
 import com.sharebyte.entities.User;
 import com.sharebyte.entities.VerificationToken;
+import com.sharebyte.enums.Role;
 import com.sharebyte.enums.UserStatus;
 import com.sharebyte.exception.AccountNotActiveException;
 import com.sharebyte.exception.EmailAlreadyExistsException;
@@ -56,6 +65,70 @@ public class UserService {
 		 return userRepository.findByEmail(email);
 	} 
 	
+	public UserProfileResponseDTO getUserProfile(Long userId) {
+		User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return mapToProfileDTO(user);
+	}
+	
+	public UserProfileResponseDTO getLoggedInUserProfile() {
+		String email = SecurityContextHolder.getContext().getAuthentication().getName();
+		
+		User user = userRepository.findByEmail(email);
+		
+		if(user == null) {
+			throw new UserNotFoundException("User not found");
+		}
+		return mapToProfileDTO(user);
+	}
+	
+	private UserProfileResponseDTO mapToProfileDTO(User user) {
+		UserProfileResponseDTO dto = new UserProfileResponseDTO();
+		
+		dto.setId(user.getId());
+		dto.setEmail(user.getEmail());
+		dto.setRole(user.getRole().name());
+		
+		dto.setImage(user.getProfileImage());
+		
+		return dto;
+	}
+	
+	private void saveFile(MultipartFile image, String fileName) {
+		Path path = Paths.get("uploads/profile");
+		Path filePath = path.resolve(fileName);
+		try {
+			Files.createDirectories(path);
+			
+			Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+			
+		} catch (IOException e) {
+			// TODO: handle exception
+			System.out.println(e);
+		}
+	}
+	
+	public void uploadUserImage(MultipartFile image) {
+		String email = SecurityContextHolder.getContext().getAuthentication().getName();
+		
+		User user = userRepository.findByEmail(email);
+		if(user == null) {
+			throw new UserNotFoundException("User not found");
+		}
+		String ofn = image.getOriginalFilename();
+		String fname  = user.getId() + "_profile" + ofn.substring(ofn.lastIndexOf('.'));
+		
+		
+		saveFile(image, fname);
+		
+		
+		user.setProfileImage(fname);
+		
+
+        userRepository.save(user);
+	}
+	
 	public RegisterResponseDTO register(RegisterRequestDTO request) {
 		
 		if(userRepository.existsByEmail(request.getEmail())) {
@@ -67,8 +140,8 @@ public class UserService {
 		user.setEmail(request.getEmail());
 		user.setPassword(encoder.encode(request.getPassword()));
 		user.setStatus(UserStatus.PENDING_VERIFIACATION);
-		user.setRole(request.getRole());
-		
+		user.setRole(Role.valueOf(request.getRole())); 
+	
 		userRepository.save(user);
 		
 		emailService.sendEmail(

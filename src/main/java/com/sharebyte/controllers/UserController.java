@@ -4,15 +4,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.sharebyte.dtos.LoginRequestDTO;
 import com.sharebyte.dtos.LoginResponseDTO;
 import com.sharebyte.dtos.RegisterRequestDTO;
 import com.sharebyte.dtos.RegisterResponseDTO;
+import com.sharebyte.dtos.UserProfileResponseDTO;
 import com.sharebyte.services.UserService;
 
 import jakarta.validation.Valid;
@@ -23,6 +27,23 @@ public class UserController {
 	
 	@Autowired
 	UserService userService;
+	
+	@GetMapping("/{userId}/profile")
+	public ResponseEntity<UserProfileResponseDTO> getUserProfile(@PathVariable Long userId) {
+		return ResponseEntity.ok(userService.getUserProfile(userId));
+	}
+	
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileResponseDTO> getMyProfile() {
+        return ResponseEntity.ok(userService.getLoggedInUserProfile());
+    }
+	
+	@PostMapping("/upload-image")
+	public ResponseEntity<?> uploadImage(@RequestParam("image") MultipartFile image) {
+
+	        userService.uploadUserImage(image);
+	        return ResponseEntity.ok("Image uploaded successfully");
+	}
 	
 	@GetMapping("/pro")
 	public ResponseEntity<String> profile(){

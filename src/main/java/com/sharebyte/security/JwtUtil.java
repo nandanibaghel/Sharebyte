@@ -1,6 +1,8 @@
 package com.sharebyte.security;
 
 import com.sharebyte.controllers.UserController;
+
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -20,13 +22,15 @@ public class JwtUtil {
 	
 	@Value("${jwt.expiration}")
 	private long expiration;
-		
+	
+	
 	
 	private SecretKeySpec getSigninKey() {
 		return new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
 	}
 	
 	public String generateToken(String email) {
+		
 		return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())

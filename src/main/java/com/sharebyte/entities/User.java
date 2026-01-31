@@ -1,6 +1,7 @@
 package com.sharebyte.entities;
 
 
+import com.sharebyte.enums.Role;
 import com.sharebyte.enums.UserStatus;
 
 import jakarta.persistence.Column;
@@ -20,7 +21,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class User {
-
+	
+	@Enumerated(EnumType.STRING)
+	private Role role;
+	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
@@ -33,21 +37,19 @@ public class User {
 	
 	@Column(nullable=false,unique=true)
 	private String email;
-	
-	@Column(nullable = false)
-	private String role;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable=false)
 	private UserStatus status;
-
+	
+	private String profileImage;
 	
 	
-	public String getRole() {
+	public Role getRole() {
 		return role;
 	}
 
-	public void setRole(String role) {
+	public void setRole(Role role) {
 		this.role = role;
 	}
 
@@ -90,4 +92,14 @@ public class User {
 	public void setStatus(UserStatus status) {
 		this.status = status;
 	}
+
+	public String getProfileImage() {
+		return profileImage;
+	}
+
+	public void setProfileImage(String profileImage) {
+		this.profileImage = profileImage;
+	}
+	
+	
 }

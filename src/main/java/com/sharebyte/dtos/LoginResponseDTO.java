@@ -1,10 +1,12 @@
 package com.sharebyte.dtos;
 
+import com.sharebyte.enums.Role;
+
 public class LoginResponseDTO {
 
     private String message;
     private String email;
-    private String role;
+    private Role role;
     private String token;
     
     
@@ -26,12 +28,11 @@ public class LoginResponseDTO {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	public String getRole() {
+	public Role getRole() {
 		return role;
 	}
-	public void setRole(String role) {
+	public void setRole(Role role) {
 		this.role = role;
 	}
-
-    
+	
 }
