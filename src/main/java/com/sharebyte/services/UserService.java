@@ -26,6 +26,7 @@ import com.sharebyte.dtos.LoginRequestDTO;
 import com.sharebyte.dtos.LoginResponseDTO;
 import com.sharebyte.dtos.RegisterRequestDTO;
 import com.sharebyte.dtos.RegisterResponseDTO;
+import com.sharebyte.dtos.UpdateProfileRequestDTO;
 import com.sharebyte.dtos.UserProfileResponseDTO;
 import com.sharebyte.entities.User;
 import com.sharebyte.entities.VerificationToken;
@@ -51,7 +52,6 @@ public class UserService {
     @Autowired
     private PasswordEncoder encoder;
   
-    
 	@Autowired
 	private UserRepository userRepository;
 	
@@ -61,6 +61,31 @@ public class UserService {
 	@Autowired     
     private VerificationTokenRepository verificationRepo;
 
+	
+	public void updateProfile(
+	        String email,
+	        UpdateProfileRequestDTO dto,
+	        MultipartFile profileImage) {
+
+	    User user = userRepository.findByEmail(email);
+
+	    if (dto != null && dto.getName() != null) {
+	        user.setName(dto.getName());
+	    }
+
+	    if (profileImage != null && !profileImage.isEmpty()) {
+	    		String ofn = profileImage.getOriginalFilename();
+			String fname  = user.getId() + "_profile" + ofn.substring(ofn.lastIndexOf('.'));
+			
+			
+	        	saveFile(profileImage, fname);
+	        user.setProfileImage(fname);
+	    }
+
+	    userRepository.save(user);
+	}
+
+	
 	public User getUserByEmail(String email){
 		 return userRepository.findByEmail(email);
 	} 

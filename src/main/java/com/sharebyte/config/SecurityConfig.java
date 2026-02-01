@@ -29,7 +29,8 @@ public class SecurityConfig {
         		auth -> auth.requestMatchers(
                 "/user/register",
                 "/user/login",
-                "/auth/verify"
+                "/auth/verify",
+                "/images/profile/*"
             ).permitAll()
             .anyRequest().authenticated()
         ).addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
