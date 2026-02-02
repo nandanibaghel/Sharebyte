@@ -1,6 +1,8 @@
 package com.sharebyte.entities;
 
 
+import java.time.LocalDateTime;
+
 import com.sharebyte.enums.Role;
 import com.sharebyte.enums.UserStatus;
 
@@ -44,7 +46,17 @@ public class User {
 	
 	private String profileImage;
 	
+	private LocalDateTime createdAt;
 	
+	
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
 	public Role getRole() {
 		return role;
 	}

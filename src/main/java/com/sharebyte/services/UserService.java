@@ -164,17 +164,17 @@ public class UserService {
 		user.setName(request.getName());
 		user.setEmail(request.getEmail());
 		user.setPassword(encoder.encode(request.getPassword()));
-		user.setStatus(UserStatus.PENDING_VERIFIACATION);
+		user.setStatus(UserStatus.ACTIVE);
 		user.setRole(Role.valueOf(request.getRole())); 
 	
 		userRepository.save(user);
 		
-		emailService.sendEmail(
-			    user.getEmail(),
-			    "Verify your ShareByte account",
-			    "Thank you for registering.\nPlease verify your email to activate your account."
-			);
-		
+//		emailService.sendEmail(
+//			    user.getEmail(),
+//			    "Verify your ShareByte account",
+//			    "Thank you for registering.\nPlease verify your email to activate your account."
+//			);
+//		
 		String token = UUID.randomUUID().toString();
 
 		VerificationToken verificationToken = new VerificationToken();

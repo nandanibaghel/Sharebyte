@@ -30,9 +30,14 @@ com.sharebyte
 - Global exception handling
 - Email Verification
 - Jwt Authentication
-
+- user update profile
+- Admin get all users 
 
 ## API Endpoints
-POST /api/users/register
-POST /api/users/login
-GET /api/auth/verify
+POST /users/register
+POST /users/login
+GET /auth/verify
+
+PUT /users/update-profile
+
+GET /admin/users/
