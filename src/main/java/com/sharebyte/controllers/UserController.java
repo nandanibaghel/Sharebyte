@@ -1,5 +1,7 @@
 package com.sharebyte.controllers;
 
+import java.security.Provider.Service;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.sharebyte.dtos.ChangePasswordRequestDTO;
 import com.sharebyte.dtos.LoginRequestDTO;
 import com.sharebyte.dtos.LoginResponseDTO;
 import com.sharebyte.dtos.RegisterRequestDTO;
@@ -31,6 +34,17 @@ public class UserController {
 	
 	@Autowired
 	UserService userService;
+	
+	@PutMapping("/change-password")
+	public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequestDTO request){
+		boolean flag = userService.changePassword(request);
+		
+		if(flag) {
+			return ResponseEntity.ok("Password updated successfully");
+		}else {
+			return new ResponseEntity<>("Old password is missmatch..",HttpStatus.BAD_REQUEST);
+		}
+	}
 	
 	@PutMapping("/profile")
 	public ResponseEntity<?> updateProfile(

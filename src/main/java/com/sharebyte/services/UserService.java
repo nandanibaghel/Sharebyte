@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.sharebyte.controllers.UserController;
+import com.sharebyte.dtos.ChangePasswordRequestDTO;
 import com.sharebyte.dtos.LoginRequestDTO;
 import com.sharebyte.dtos.LoginResponseDTO;
 import com.sharebyte.dtos.RegisterRequestDTO;
@@ -61,6 +62,18 @@ public class UserService {
 	@Autowired     
     private VerificationTokenRepository verificationRepo;
 
+	public boolean changePassword(ChangePasswordRequestDTO dto) {
+		String email = SecurityContextHolder.getContext().getAuthentication().getName();
+		User loggedInUser = userRepository.findByEmail(email);
+		
+		if(encoder.matches(dto.getOldPassword(), loggedInUser.getPassword())) {
+			loggedInUser.setPassword(encoder.encode(dto.getNewPassword()));
+			userRepository.save(loggedInUser);
+			return true;
+		}else {
+			return false;
+		}
+	}
 	
 	public void updateProfile(
 	        String email,

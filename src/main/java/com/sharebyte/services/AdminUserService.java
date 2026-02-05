@@ -5,12 +5,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.sharebyte.dtos.AdminUserResponseDTO;
 import com.sharebyte.entities.User;
 import com.sharebyte.enums.Role;
 import com.sharebyte.enums.UserStatus;
+import com.sharebyte.exception.UserNotFoundException;
 import com.sharebyte.repositories.UserRepository;
 
 @Service
@@ -55,6 +57,25 @@ public class AdminUserService {
                         user.getStatus()
                 )
         );
+    }
+    
+    public String updateUserStatus(Long userId, String status) {
+    		String email = SecurityContextHolder.getContext().getAuthentication().getName();
+    		User loggedInUser = userRepository.findByEmail(email);
+    		
+    	
+    		
+    		if(loggedInUser.getId() != userId) {
+    			User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    			user.setStatus(UserStatus.valueOf(status));
+    			
+    			userRepository.save(user);
+    			return "User status updated successfully";
+    		}else {
+    			return "you can not change self status";
+    		}
+    		
     }
 }
 
